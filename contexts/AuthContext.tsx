@@ -1,29 +1,25 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { loginUser, setAuthHeader } from "@/lib/api";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface User {
-  id: string;
+  id: number;
   username: string;
-  name: string;
   email: string;
-  avatar?: string;
-}
-
-interface Course {
-  id: string;
-  name: string;
-  instructor: string;
-  schedule: string;
-  duration: string;
-  isLive?: boolean;
-  progress?: number;
-  enrolledDate: string;
+  full_name: string;
+  phone: string;
+  grade: string;
+  board_type: string;
+  is_active: boolean;
+  last_login: string;
+  created_on: string;
+  updated_at: string;
+  token: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  courses: Course[];
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -31,119 +27,83 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock data
-const mockUser: User = {
-  id: '1',
-  username: 'student123',
-  name: 'John Smith',
-  email: 'john.smith@email.com',
-  avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2'
-};
-
-const mockCourses: Course[] = [
-  {
-    id: '1',
-    name: 'Advanced JavaScript',
-    instructor: 'Dr. Sarah Johnson',
-    schedule: 'Mon, Wed, Fri - 10:00 AM',
-    duration: '12 weeks',
-    isLive: true,
-    progress: 75,
-    enrolledDate: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'React Development',
-    instructor: 'Prof. Mike Chen',
-    schedule: 'Tue, Thu - 2:00 PM',
-    duration: '10 weeks',
-    isLive: true,
-    progress: 60,
-    enrolledDate: '2024-01-10'
-  },
-  {
-    id: '3',
-    name: 'Database Design',
-    instructor: 'Dr. Emily Rodriguez',
-    schedule: 'Sat - 9:00 AM',
-    duration: '8 weeks',
-    isLive: false,
-    progress: 100,
-    enrolledDate: '2023-11-20'
-  },
-  {
-    id: '4',
-    name: 'UI/UX Design Principles',
-    instructor: 'Alex Thompson',
-    schedule: 'Mon, Wed - 3:00 PM',
-    duration: '6 weeks',
-    isLive: false,
-    progress: 85,
-    enrolledDate: '2023-12-05'
-  },
-  {
-    id: '5',
-    name: 'Python Programming',
-    instructor: 'Dr. James Wilson',
-    schedule: 'Tue, Thu, Fri - 11:00 AM',
-    duration: '14 weeks',
-    isLive: true,
-    progress: 45,
-    enrolledDate: '2024-01-22'
-  }
-];
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for stored auth on mount
-    const storedUser = localStorage.getItem('student-portal-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setCourses(mockCourses);
+    const storedUser = localStorage.getItem("student-portal-user");
+    const storedToken = localStorage.getItem("user_token");
+
+    if (storedUser && storedToken) {
+      const userData = JSON.parse(storedUser);
+      const token = JSON.parse(storedToken);
+
+      setAuthHeader(token);
+      setUser(userData);
     }
+
     setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simple mock authentication
-    if (username === 'student123' && password === 'password123') {
-      setUser(mockUser);
-      setCourses(mockCourses);
-      localStorage.setItem('student-portal-user', JSON.stringify(mockUser));
+
+    try {
+      const response = await loginUser({ username, password });
+
+      if (response.success && response.result) {
+        const userData: User = {
+          id: response.result.id,
+          username: response.result.username,
+          email: response.result.email,
+          full_name: response.result.full_name,
+          phone: response.result.phone,
+          grade: response.result.grade,
+          board_type: response.result.board_type,
+          is_active: response.result.is_active,
+          last_login: response.result.last_login,
+          created_on: response.result.created_on,
+          updated_at: response.result.updated_at,
+          token: response.result.token,
+        };
+
+        // Set auth header with the token
+        setAuthHeader(response.result.token);
+        setUser(userData);
+
+        // Store both user data and token separately
+        localStorage.setItem("student-portal-user", JSON.stringify(userData));
+        localStorage.setItem("user_token", JSON.stringify(response.result.token));
+
+        setIsLoading(false);
+        return true;
+      }
+
       setIsLoading(false);
-      return true;
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
     setUser(null);
-    setCourses([]);
-    localStorage.removeItem('student-portal-user');
+    setAuthHeader(""); // Clear the auth header
+    localStorage.removeItem("student-portal-user");
+    localStorage.removeItem("user_token");
   };
 
-  return (
-    <AuthContext.Provider value={{ user, courses, login, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

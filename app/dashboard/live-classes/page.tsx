@@ -1,16 +1,119 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import DashboardLayout from '@/components/DashboardLayout';
-import CourseCard from '@/components/CourseCard';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { Video, Clock } from 'lucide-react';
+import { useAuth } from "@/contexts/AuthContext";
+import DashboardLayout from "@/components/DashboardLayout";
+import ClassLinkCard from "@/components/ClassLinkCard";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { Video, Clock, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getClassLinks } from "@/lib/api";
+
+// Define the course interface based on your API response
+interface ClassLinkCourse {
+  course_id: number;
+  live_link: string;
+  topic: string;
+  created_on: string;
+  course_title: string;
+  subject: string;
+  board_type: string;
+  start_date: string;
+  end_date: string;
+  enrollment_id: string;
+  enrolled_at: string;
+  status: string;
+  grade_level?: string;
+  instructor_name?: string;
+  thumbnail_url?: string;
+}
+
+interface ClassLinkResponse {
+  result: {
+    count: number;
+    list: ClassLinkCourse[];
+  };
+  success: boolean;
+}
 
 export default function LiveClassesPage() {
-  const { courses } = useAuth();
+  const [classLinks, setClassLinks] = useState<ClassLinkCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const liveCourses = courses.filter(course => course.isLive);
-  const upcomingCourses = courses.filter(course => !course.isLive);
+  // Function to check if a course is currently live
+  const isCourseLive = (course: ClassLinkCourse) => {
+    const now = new Date();
+    const startDate = new Date(course.start_date);
+    const endDate = new Date(course.end_date);
+    // for testing, consider the course live if it's active and start date is in the past
+    return course.status === "active" && now >= startDate;
+  };
+
+  // Function to check if a course is upcoming
+  const isCourseUpcoming = (course: ClassLinkCourse) => {
+    const now = new Date();
+    const startDate = new Date(course.start_date);
+    return startDate > now && course.status === "active";
+  };
+
+  const fetchClassLink = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const classLinkData = await getClassLinks();
+
+      if (classLinkData.success) {
+        setClassLinks(classLinkData.result.list);
+      } else {
+        setError("Failed to fetch enrolled courses");
+      }
+    } catch (error) {
+      console.error("Error fetching enrolled courses:", error);
+      setError("An error occurred while fetching your courses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClassLink();
+  }, []);
+
+  // Filter courses based on live/upcoming status
+  const liveCourses = classLinks.filter(isCourseLive);
+  const upcomingCourses = classLinks.filter(isCourseUpcoming);
+
+  if (loading) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <div className="flex items-center justify-center min-h-64">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+              <p className="text-gray-600">Loading your live classes...</p>
+            </div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <DashboardLayout>
+          <div className="flex items-center justify-center min-h-64">
+            <div className="text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <button onClick={fetchClassLink} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Try Again
+              </button>
+            </div>
+          </div>
+        </DashboardLayout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -31,15 +134,11 @@ export default function LiveClassesPage() {
                 {liveCourses.length} Active
               </span>
             </div>
-            
+
             {liveCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 {liveCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    showJoinButton={true}
-                  />
+                  <ClassLinkCard key={course.course_id} course={course} showJoinButton={true} />
                 ))}
               </div>
             ) : (
@@ -57,15 +156,11 @@ export default function LiveClassesPage() {
               <Clock className="h-5 w-5 text-blue-600" />
               <h2 className="text-xl font-semibold text-gray-900">Upcoming Classes</h2>
             </div>
-            
+
             {upcomingCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    showJoinButton={true}
-                  />
+                  <ClassLinkCard key={course.course_id} course={course} showJoinButton={true} />
                 ))}
               </div>
             ) : (
