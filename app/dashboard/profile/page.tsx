@@ -107,7 +107,7 @@ export default function ProfilePage() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="text-center">
-                  <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden bg-gray-200">
+                  {/* <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden bg-gray-200">
                     {user?.avatar ? (
                       <Image src={user.avatar} alt={user.name} width={128} height={128} className="w-full h-full object-cover" />
                     ) : (
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                         <User className="h-12 w-12 text-white" />
                       </div>
                     )}
-                  </div>
+                  </div> */}
 
                   {isEditing ? (
                     <div className="space-y-3">
