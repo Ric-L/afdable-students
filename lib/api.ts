@@ -12,7 +12,8 @@ if (process.env.NODE_ENV === "development") {
   // axios.defaults.baseURL = 'http://192.168.1.15:8100/api/v1/admin';
   // axios.defaults.baseURL = 'https://tomthin.in/api/v1/admin';
 } else {
-  axios.defaults.baseURL = "https://tomthin.in/api/v1/admin";
+  // axios.defaults.baseURL = "https://tomthin.in/api/v1/admin";
+  axios.defaults.baseURL = "https://afdableclasses.in/api/v1/students";
 }
 
 axios.defaults.headers.post["Content-Type"] = "application/json";
