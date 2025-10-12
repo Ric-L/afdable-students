@@ -80,3 +80,45 @@ interface CoursesResponse {
   count: number;
   list: CourseItem[];
 }
+
+export type TStudentSignup = {
+  username: string;
+  password: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  grade?: string;
+  board_type?: string;
+};
+
+export interface TEnrollmentRequest {
+  id?: number;
+  // Add your enrollment request fields here
+  courseId: number;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TEnrollmentRequestStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+}
+
+export type TCreateEnrollmentRequest = {
+  course_id: number;
+  original_price: number;
+  discounted_price: number;
+  promo_code_id?: number;
+  student_notes?: string;
+};
+
+export type TUpdateEnrollmentRequest = {
+  course_id: number;
+  original_price: number;
+  discounted_price: number;
+  promo_code_id?: number;
+  student_notes?: string;
+};
