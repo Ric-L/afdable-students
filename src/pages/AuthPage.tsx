@@ -1,9 +1,19 @@
 import React, { useState } from "react";
-import { Box, Container, Typography, Tabs, Tab, TextField, Button, CircularProgress, Alert, InputAdornment, IconButton, Card, CardContent } from "@mui/material";
+import { Box, Container, Typography, Tabs, Tab, TextField, Button, CircularProgress, Alert, InputAdornment, IconButton, Card, CardContent, MenuItem } from "@mui/material";
 import { School, Visibility, VisibilityOff, Warning, Book, People, EmojiEvents, AutoAwesome } from "@mui/icons-material";
 import { loginUser, signUpUser } from "../api";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../react-redux/features/authSlice";
+
+export type TStudentSignup = {
+  username: string;
+  password: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  grade: string;
+  board_type: string;
+};
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -11,18 +21,93 @@ export default function AuthPage() {
     username: "",
     password: "",
     email: "",
+    full_name: "",
+    phone: "",
+    grade: "",
+    board_type: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Common validation for both login and signup
+    if (!formData.username.trim()) {
+      errors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      errors.username = "Username must be at least 3 characters";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    // Signup specific validation
+    if (activeTab === "signup") {
+      if (!formData.email.trim()) {
+        errors.email = "Email is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        errors.email = "Please enter a valid email address";
+      }
+
+      if (!formData.full_name.trim()) {
+        errors.full_name = "Full name is required";
+      } else if (formData.full_name.length < 2) {
+        errors.full_name = "Full name must be at least 2 characters";
+      }
+
+      if (!formData.phone.trim()) {
+        errors.phone = "Phone number is required";
+      } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\D/g, ""))) {
+        errors.phone = "Please enter a valid 10-digit phone number";
+      }
+
+      if (!formData.grade) {
+        errors.grade = "Grade is required";
+      } else if (!["9", "10"].includes(formData.grade)) {
+        errors.grade = "Grade must be either 9 or 10";
+      }
+
+      if (!formData.board_type) {
+        errors.board_type = "Board type is required";
+      } else if (!["CBSE", "COHSEM"].includes(formData.board_type)) {
+        errors.board_type = "Board type must be either CBSE or COHSEM";
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const resetForm = () => {
-    setFormData({ username: "", password: "", email: "" });
+    setFormData({
+      username: "",
+      password: "",
+      email: "",
+      full_name: "",
+      phone: "",
+      grade: "",
+      board_type: "",
+    });
     setError("");
+    setFieldErrors({});
   };
 
   const dispatch = useDispatch();
@@ -30,6 +115,13 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Validate form before submission
+    if (!validateForm()) {
+      setError("Please fix the validation errors before submitting.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -41,11 +133,16 @@ export default function AuthPage() {
         });
         console.log("Login Response:", response);
       } else {
-        response = await signUpUser({
+        const signupData: TStudentSignup = {
           username: formData.username,
           password: formData.password,
           email: formData.email,
-        });
+          full_name: formData.full_name,
+          phone: formData.phone,
+          grade: formData.grade,
+          board_type: formData.board_type,
+        };
+        response = await signUpUser(signupData);
         console.log("Signup Response:", response);
       }
 
@@ -220,9 +317,85 @@ export default function AuthPage() {
           )}
 
           <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField label="Username" value={formData.username} onChange={(e) => handleChange("username", e.target.value)} required fullWidth disabled={isLoading} />
+            <TextField
+              label="Username"
+              value={formData.username}
+              onChange={(e) => handleChange("username", e.target.value)}
+              required
+              fullWidth
+              disabled={isLoading}
+              error={!!fieldErrors.username}
+              helperText={fieldErrors.username}
+            />
 
-            {activeTab === "signup" && <TextField label="Email" type="email" value={formData.email} onChange={(e) => handleChange("email", e.target.value)} required fullWidth disabled={isLoading} />}
+            {activeTab === "signup" && (
+              <>
+                <TextField
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  required
+                  fullWidth
+                  disabled={isLoading}
+                  error={!!fieldErrors.email}
+                  helperText={fieldErrors.email}
+                />
+
+                <TextField
+                  label="Full Name"
+                  value={formData.full_name}
+                  onChange={(e) => handleChange("full_name", e.target.value)}
+                  required
+                  fullWidth
+                  disabled={isLoading}
+                  error={!!fieldErrors.full_name}
+                  helperText={fieldErrors.full_name}
+                />
+
+                <TextField
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  required
+                  fullWidth
+                  disabled={isLoading}
+                  error={!!fieldErrors.phone}
+                  helperText={fieldErrors.phone}
+                  placeholder="10-digit phone number"
+                />
+
+                <TextField
+                  select
+                  label="Grade"
+                  value={formData.grade}
+                  onChange={(e) => handleChange("grade", e.target.value)}
+                  required
+                  fullWidth
+                  disabled={isLoading}
+                  error={!!fieldErrors.grade}
+                  helperText={fieldErrors.grade}
+                >
+                  <MenuItem value="9">Grade 9</MenuItem>
+                  <MenuItem value="10">Grade 10</MenuItem>
+                </TextField>
+
+                <TextField
+                  select
+                  label="Board Type"
+                  value={formData.board_type}
+                  onChange={(e) => handleChange("board_type", e.target.value)}
+                  required
+                  fullWidth
+                  disabled={isLoading}
+                  error={!!fieldErrors.board_type}
+                  helperText={fieldErrors.board_type}
+                >
+                  <MenuItem value="CBSE">CBSE</MenuItem>
+                  <MenuItem value="COHSEM">COHSEM</MenuItem>
+                </TextField>
+              </>
+            )}
 
             <TextField
               label="Password"
@@ -232,6 +405,8 @@ export default function AuthPage() {
               required
               fullWidth
               disabled={isLoading}
+              error={!!fieldErrors.password}
+              helperText={fieldErrors.password}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
