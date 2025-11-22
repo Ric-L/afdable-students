@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import ClassLinkCard from "@/components/ClassLinkCard";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Video, Clock, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getClassLinks } from "@/lib/api";

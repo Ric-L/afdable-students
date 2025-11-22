@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { getEnrollmentRequests } from "@/lib/api";
 import React, { useEffect, useState } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BookOpen, Clock, CheckCircle, XCircle } from "lucide-react";
 
 // Define the types

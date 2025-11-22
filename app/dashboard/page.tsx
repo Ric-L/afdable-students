@@ -3,10 +3,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import CourseCard from "@/components/CourseCard";
-import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { BookOpen, Clock, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getEnrolledCourses } from "@/lib/api";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 interface EnrolledCourse {
   enrollment_id: string;

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import CourseCard from "@/components/CourseCard";
-import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { BookOpen } from "lucide-react";
 import { getEnrolledCourses } from "@/lib/api";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Define the course type based on your API response
 interface EnrolledCourse {

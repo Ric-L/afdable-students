@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { User, Mail, Phone, Calendar, CreditCard as Edit2, Save, X } from "lucide-react";
 import Image from "next/image";
 import { getProfile } from "@/lib/api";

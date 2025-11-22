@@ -3,9 +3,10 @@
 import DashboardLayout from "@/components/DashboardLayout";
 
 import React, { useEffect, useState } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { BookOpen, Users, Star, Calendar } from "lucide-react";
 import { getActiveaCourses, getActiveFeatureCourseByID } from "@/lib/api";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Define the types based on the Go struct
 export type TCourse = {
@@ -69,7 +70,7 @@ const ActiveCoursesPage = () => {
 
   const fetchFeaturedCourses = async () => {
     try {
-      const featuredData: TActiveCoursesResponse = await getActiveFeatureCourseByID(6);
+      const featuredData: TActiveCoursesResponse = await getActiveFeatureCourseByID();
       if (featuredData.success && featuredData.result) {
         setFeaturedCourses(featuredData.result.list);
       }
