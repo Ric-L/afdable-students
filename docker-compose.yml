@@ -1,0 +1,29 @@
+networks:
+  intranet:
+    external: true
+    name: tomthin-net
+
+services:
+  afdable-student-ui:
+    image: afdable-student-ui-frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: afdable-student-ui
+
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+
+    networks:
+      - intranet
+
+    restart: always
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.afdable-student-ui.rule=Host(`students.afdableclasses.in`) || Host(`www.students.afdableclasses.in`)"
+      - "traefik.http.routers.afdable-student-ui.entrypoints=websecure"
+      - "traefik.http.routers.afdable-student-ui.tls=true"
+      - "traefik.http.routers.afdable-student-ui.tls.certresolver=le"
+      - "traefik.http.services.afdable-student-ui.loadbalancer.server.port=3000"
